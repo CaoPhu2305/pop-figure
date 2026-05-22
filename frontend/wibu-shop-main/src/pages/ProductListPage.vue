@@ -1,210 +1,120 @@
 <template>
   <div class="product-list-page">
-    <!-- Hero Section -->
-    <v-container class="pt-8 pb-4">
-      <v-card class="hero-card pa-6 rounded-xl overflow-hidden position-relative surface-card" variant="flat">
-        <div class="hero-glow" />
-        <v-row align="center" class="position-relative" style="z-index: 1;">
+    <v-container class="py-10">
+      <v-card class="surface-card pa-6 mb-6">
+        <v-row align="center" class="gy-4">
           <v-col cols="12" lg="7">
-            <div class="text-overline text-primary tracking-widest mb-2 section-heading">KHÁM PHÁ BỘ SƯU TẬP</div>
-            <h1 class="text-h4 font-weight-bold mb-3">
-              Tìm kiếm figure <span class="gradient-text">mơ ước</span> của bạn
+            <div class="section-heading mb-2">Catalog</div>
+            <h1 class="text-h4 text-md-h3 font-weight-black mb-3">
+              Danh sách sản phẩm theo cấu trúc database
             </h1>
-            <p class="text-body-2 text-medium-emphasis mb-6" style="max-width: 500px;">
-              Giao diện danh sách được làm gọn để bạn kiểm tra luồng dữ liệu và cảm giác hiển thị.
+            <p class="muted-copy mb-0">
+              Bộ lọc và lưới hiển thị này chỉ dùng các field thực tế từ backend: name, slug, description,
+              category và trạng thái vaulted.
             </p>
           </v-col>
-
           <v-col cols="12" lg="5">
             <v-text-field
               v-model="searchQuery"
-              label="Tìm theo tên, danh mục..."
               prepend-inner-icon="mdi-magnify"
+              label="Tìm theo tên hoặc slug"
               variant="outlined"
               rounded="xl"
-              class="search-field"
               hide-details
               clearable
-              @keyup.enter="fetchProducts"
             />
           </v-col>
         </v-row>
       </v-card>
-    </v-container>
 
-    <!-- Filters Section -->
-    <v-container class="py-2">
-      <v-card class="filter-card pa-4 rounded-xl surface-card" variant="outlined">
+      <v-card class="surface-card pa-4 mb-6">
         <v-row align="center" dense>
-          <v-col cols="12" md="3">
-            <div class="text-caption text-medium-emphasis">{{ totalProducts }} sản phẩm</div>
+          <v-col cols="12" md="4">
+            <div class="text-caption muted-copy">Tổng sản phẩm</div>
+            <div class="text-h5 font-weight-bold">{{ filteredProducts.length }}</div>
+            <div class="text-caption muted-copy">
+              Trang {{ currentPage }} / {{ totalPages }} - {{ pageSize }} sản phẩm mỗi trang
+            </div>
           </v-col>
-
-          <v-col cols="6" sm="4" md="2">
+          <v-col cols="12" sm="6" md="3">
             <v-select
-              v-model="filters.category_id"
-              :items="categories"
+              v-model="categoryFilter"
+              :items="categoryOptions"
               item-title="name"
               item-value="id"
               label="Danh mục"
               variant="outlined"
               rounded="lg"
-              density="compact"
               hide-details
               clearable
             />
           </v-col>
-
-          <v-col cols="6" sm="4" md="2">
+          <v-col cols="12" sm="6" md="3">
             <v-select
-              v-model="filters.supplier_id"
-              :items="suppliers"
-              item-title="name"
-              item-value="id"
-              label="Nhà cung cấp"
-              variant="outlined"
-              rounded="lg"
-              density="compact"
-              hide-details
-              clearable
-            />
-          </v-col>
-
-          <v-col cols="6" sm="4" md="2">
-            <v-select
-              v-model="filters.status"
-              :items="statusOptions"
+              v-model="vaultedFilter"
+              :items="vaultedOptions"
+              item-title="title"
+              item-value="value"
               label="Trạng thái"
               variant="outlined"
               rounded="lg"
-              density="compact"
-              hide-details
-              clearable
-            />
-          </v-col>
-
-          <v-col cols="6" sm="4" md="2">
-            <v-select
-              v-model="sortBy"
-              :items="sortOptions"
-              label="Sắp xếp"
-              variant="outlined"
-              rounded="lg"
-              density="compact"
               hide-details
             />
           </v-col>
-
-          <v-col cols="12" sm="4" md="1" class="d-flex justify-end">
-            <v-btn-toggle v-model="viewMode" mandatory rounded="lg" color="primary" variant="outlined" density="compact">
-              <v-btn value="grid" icon="mdi-view-grid" size="small" />
-              <v-btn value="list" icon="mdi-view-list" size="small" />
-            </v-btn-toggle>
+          <v-col cols="12" md="2" class="d-flex justify-end">
+            <v-btn variant="outlined" rounded="xl" @click="resetFilters">Xóa lọc</v-btn>
           </v-col>
         </v-row>
       </v-card>
-    </v-container>
 
-    <!-- Products Grid -->
-    <v-container class="py-4">
-      <!-- Loading State -->
-      <v-row v-if="loading">
-        <v-col v-for="n in 8" :key="n" cols="6" sm="4" lg="3">
-          <v-skeleton-loader type="image, article" class="rounded-xl" />
+      <v-row v-if="productsStore.isLoading">
+        <v-col v-for="n in 6" :key="n" cols="12" sm="6" lg="4">
+          <v-skeleton-loader class="surface-card" type="image, article, actions" />
         </v-col>
       </v-row>
 
-      <!-- Empty State -->
-      <v-card v-else-if="products.length === 0" class="empty-state text-center py-12 rounded-xl surface-card" variant="outlined">
-        <v-icon size="64" color="primary" class="mb-4">mdi-package-variant</v-icon>
-        <h3 class="text-h6 font-weight-bold">Không tìm thấy sản phẩm</h3>
-        <p class="text-medium-emphasis mb-4">Hãy thử điều chỉnh từ khóa hoặc bộ lọc của bạn.</p>
-        <v-btn color="primary" rounded="lg" size="small" @click="clearFilters">Xóa bộ lọc</v-btn>
-      </v-card>
-
-      <!-- Grid View -->
-      <v-row v-else-if="viewMode === 'grid'">
-        <v-col v-for="product in products" :key="product.Id" cols="6" sm="4" lg="3">
-          <v-card class="product-card rounded-xl surface-card" variant="outlined">
-            <div class="image-container position-relative overflow-hidden">
-              <v-img :src="getProductImage(product)" class="product-img" cover height="180">
-                <template v-slot:placeholder>
-                  <v-row class="fill-height ma-0" align="center" justify="center">
-                    <v-progress-circular indeterminate color="primary" size="24" />
-                  </v-row>
-                </template>
-              </v-img>
-              <v-btn icon size="x-small" variant="flat" class="wishlist-btn position-absolute top-0 right-0 ma-2">
-                <v-icon size="small">mdi-heart-outline</v-icon>
-              </v-btn>
-              <div class="quick-actions pa-2">
-                <v-btn color="primary" block rounded="lg" size="small" density="comfortable">
-                  <v-icon start size="small">mdi-cart-plus</v-icon>
-                  Thêm giỏ
-                </v-btn>
-              </div>
-            </div>
-            <v-card-text class="pa-3">
-              <div class="text-caption text-primary">{{ product.CategoryName || 'Chưa phân loại' }}</div>
-              <div class="text-body-2 font-weight-bold text-truncate product-title">{{ product.Name }}</div>
-              <div class="text-caption text-medium-emphasis text-truncate">{{ product.Description || '' }}</div>
-              <div class="d-flex justify-space-between align-center mt-2">
-                <span class="text-subtitle-2 font-weight-bold neon-text-secondary">
-                  {{ formatPrice(getLowestPrice(product)) }}
-                </span>
-                <v-btn :to="`/product?id=${product.Id}`" variant="text" color="primary" size="x-small" icon="mdi-eye" />
-              </div>
-            </v-card-text>
-          </v-card>
-        </v-col>
-      </v-row>
-
-      <!-- List View -->
       <v-row v-else>
-        <v-col v-for="product in products" :key="product.Id" cols="12">
-          <v-card class="product-card-list rounded-xl overflow-hidden d-flex surface-card" variant="outlined">
+        <v-col v-for="product in pagedProducts" :key="product.id" cols="12" sm="6" lg="4">
+          <v-card class="surface-card h-100 product-card">
             <v-img
               :src="getProductImage(product)"
+              height="190"
               cover
-              width="160"
-              height="140"
-              class="flex-shrink-0"
+              class="product-image"
             />
-            <v-card-text class="pa-4 d-flex flex-column flex-grow-1">
-              <div class="d-flex justify-space-between align-start mb-2">
-                <div>
-                  <v-chip size="x-small" color="primary" variant="tonal" class="mb-1">{{ product.CategoryName || 'Chưa phân loại' }}</v-chip>
-                  <h3 class="text-subtitle-1 font-weight-bold">{{ product.Name }}</h3>
-                </div>
+            <v-card-text>
+              <div class="d-flex align-center justify-space-between mb-3">
+                <v-chip size="small" color="primary" variant="tonal">
+                  {{ product.categoryName || 'Chưa phân loại' }}
+                </v-chip>
+                <v-chip v-if="product.isVaulted" size="small" color="warning" variant="tonal">
+                  Vaulted
+                </v-chip>
               </div>
-              <p class="text-caption text-medium-emphasis line-clamp-2 mb-auto">{{ product.Description || '' }}</p>
-              <div class="d-flex align-center justify-space-between mt-2">
-                <div class="text-h6 font-weight-bold neon-text-secondary">
-                  {{ formatPrice(getLowestPrice(product)) }}
-                </div>
-                <div class="d-flex ga-2">
-                  <v-btn variant="outlined" size="small" rounded="lg">
-                    <v-icon start size="small">mdi-heart-outline</v-icon>
-                    Lưu
-                  </v-btn>
-                  <v-btn :to="`/product?id=${product.Id}`" color="primary" size="small" rounded="lg">
-                    Chi tiết
-                  </v-btn>
-                </div>
+              <h3 class="text-h6 font-weight-bold mb-2">{{ product.name }}</h3>
+              <p class="muted-copy line-clamp-2 mb-4">{{ product.description }}</p>
+              <div class="d-flex justify-space-between align-center">
+                <div class="text-caption muted-copy">Slug: {{ product.slug }}</div>
+                <v-btn :to="`/product?id=${product.id}`" color="primary" variant="text">Xem chi tiết</v-btn>
               </div>
             </v-card-text>
           </v-card>
         </v-col>
       </v-row>
 
-      <!-- Pagination -->
-      <div v-if="products.length > 0" class="d-flex justify-center mt-8">
+      <v-card v-if="!productsStore.isLoading && filteredProducts.length === 0" class="surface-card pa-10 text-center">
+        <v-icon size="64" color="primary" class="mb-4">mdi-package-variant-off</v-icon>
+        <h2 class="text-h5 font-weight-bold mb-2">Không tìm thấy sản phẩm phù hợp</h2>
+        <p class="muted-copy mb-0">Hãy thử đổi từ khóa hoặc bỏ bớt bộ lọc.</p>
+      </v-card>
+
+      <div v-if="!productsStore.isLoading && filteredProducts.length > 0" class="d-flex justify-center mt-8">
         <v-pagination
           v-model="currentPage"
           :length="totalPages"
           rounded="circle"
           color="primary"
-          size="small"
+          density="comfortable"
         />
       </div>
     </v-container>
@@ -212,246 +122,120 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
-import { useProductsStore } from '@/stores/products.store';
-import { useCategoriesStore } from '@/stores/categories.store';
-import { useSuppliersStore } from '@/stores/suppliers.store';
-import type { Product } from '@/types';
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-// ========== PINIA STORES ==========
-const productsStore = useProductsStore();
-const categoriesStore = useCategoriesStore();
-const suppliersStore = useSuppliersStore();
+import { useCategoriesStore } from '@/stores/categories.store'
+import { useProductsStore } from '@/stores/products.store'
+import type { ProductResponse } from '@/types'
 
-// ========== LOCAL STATE ==========
-const viewMode = ref<'grid' | 'list'>('grid');
-const searchQuery = ref('');
-const sortBy = ref('newest');
-const currentPage = ref(1);
+const route = useRoute()
+const router = useRouter()
+const productsStore = useProductsStore()
+const categoriesStore = useCategoriesStore()
 
-const filters = ref({
-  category_id: null as number | null,
-  supplier_id: null as number | null,
-  status: null as string | null,
-});
+const searchQuery = ref(String(route.query.search ?? ''))
+const categoryFilter = ref<number | null>(route.query.category ? Number(route.query.category) : null)
+const vaultedFilter = ref<'all' | 'vaulted' | 'plain'>('all')
+const currentPage = ref(1)
+const pageSize = 9
 
-// ========== COMPUTED ==========
-// Lấy products từ store
-const products = computed(() => productsStore.products);
-const loading = computed(() => productsStore.isLoading);
-const totalProducts = computed(() => productsStore.total);
-const totalPages = computed(() => Math.ceil(productsStore.total / 12) || 1);
+const categoryOptions = computed(() => categoriesStore.categoryOptions)
+const vaultedOptions = [
+  { title: 'Tất cả', value: 'all' },
+  { title: 'Chỉ vaulted', value: 'vaulted' },
+  { title: 'Không vaulted', value: 'plain' },
+]
 
-// Lấy options từ stores - Dynamic data từ API
-const categories = computed(() => categoriesStore.categoryOptions);
-const suppliers = computed(() => suppliersStore.supplierOptions);
+const filteredProducts = computed(() => {
+  const keyword = searchQuery.value.trim().toLowerCase()
+  return productsStore.products.filter((product: ProductResponse) => {
+    const matchesKeyword =
+      !keyword ||
+      product.name.toLowerCase().includes(keyword) ||
+      product.slug.toLowerCase().includes(keyword) ||
+      product.description.toLowerCase().includes(keyword)
 
-// ========== STATIC OPTIONS ==========
-const statusOptions = [
-  { title: 'Tất cả', value: null },
-  { title: 'Đang bán', value: 'active' },
-  { title: 'Pre-order', value: 'pre-order' },
-  { title: 'Không hoạt động', value: 'inactive' },
-];
+    const matchesCategory = !categoryFilter.value || product.categoryId === categoryFilter.value
+    const matchesVaulted =
+      vaultedFilter.value === 'all' ||
+      (vaultedFilter.value === 'vaulted' && Boolean(product.isVaulted)) ||
+      (vaultedFilter.value === 'plain' && !product.isVaulted)
 
-const sortOptions = [
-  { title: 'Mới nhất', value: 'newest' },
-  { title: 'Tên A-Z', value: 'name_asc' },
-  { title: 'Giá thấp đến cao', value: 'price_asc' },
-  { title: 'Giá cao đến thấp', value: 'price_desc' },
-];
+    return matchesKeyword && matchesCategory && matchesVaulted
+  })
+})
 
-// ========== PLACEHOLDER IMAGE ==========
-// SVG placeholder cho sản phẩm không có ảnh
-const PLACEHOLDER_IMAGE = 'data:image/svg+xml;base64,' + btoa(`
-  <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
-    <rect fill="#1a1a2e" width="400" height="400"/>
-    <rect fill="#16213e" x="50" y="50" width="300" height="300" rx="20"/>
-    <path fill="#0f3460" d="M200 120 L280 220 L120 220 Z"/>
-    <circle fill="#e94560" cx="260" cy="140" r="25"/>
-    <text x="200" y="320" text-anchor="middle" fill="#666" font-family="Arial" font-size="16">No Image</text>
-  </svg>
-`);
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredProducts.value.length / pageSize)))
 
-// ========== METHODS ==========
-const formatPrice = (price: number) => {
-  return new Intl.NumberFormat('vi-VN', { 
-    style: 'currency', 
-    currency: 'VND' 
-  }).format(price);
-};
+const pagedProducts = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return filteredProducts.value.slice(start, start + pageSize)
+})
 
-// Lấy hình ảnh sản phẩm - với placeholder nếu không có ảnh
-const getProductImage = (product: Product) => {
-  const imageUrl = (product as any).ImageUrl || (product as any).imageUrl || product.ImageUrl;
-  
-  // Kiểm tra có ảnh hay không
-  if (!imageUrl || imageUrl === '' || imageUrl === null || imageUrl === 'null') {
-    return PLACEHOLDER_IMAGE;
-  }
-  
-  return imageUrl;
-};
+const resetFilters = () => {
+  searchQuery.value = ''
+  categoryFilter.value = null
+  vaultedFilter.value = 'all'
+  currentPage.value = 1
+  router.replace({ query: {} })
+}
 
-// Lấy giá thấp nhất
-const getLowestPrice = (product: Product) => {
-  const price = (product as any).Price || (product as any).price;
-  return price || 0;
-};
-
-// Fetch products từ store
-const fetchProducts = async () => {
-  if (searchQuery.value.trim()) {
-    await productsStore.searchProducts(searchQuery.value);
-  } else if (filters.value.category_id) {
-    await productsStore.fetchByCategory(filters.value.category_id);
-  } else {
-    await productsStore.fetchProducts();
-  }
-};
-
-// Clear filters
-const clearFilters = () => {
-  searchQuery.value = '';
-  filters.value = { category_id: null, supplier_id: null, status: null };
-  sortBy.value = 'newest';
-  fetchProducts();
-};
-
-// Watch for filter changes
 watch(
-  () => filters.value.category_id,
-  (newVal) => {
-    if (newVal) {
-      productsStore.fetchByCategory(newVal);
-    } else {
-      productsStore.fetchProducts();
-    }
-  }
-);
+  () => route.query.search,
+  (value) => {
+    searchQuery.value = String(value ?? '')
+  },
+)
 
-// ========== LIFECYCLE ==========
+watch(
+  () => route.query.category,
+  (value) => {
+    categoryFilter.value = value ? Number(value) : null
+  },
+)
+
+watch(searchQuery, (value) => {
+  currentPage.value = 1
+  router.replace({
+    query: {
+      ...route.query,
+      search: value || undefined,
+      category: categoryFilter.value || undefined,
+    },
+  })
+})
+
+watch([categoryFilter, vaultedFilter], () => {
+  currentPage.value = 1
+})
+
+watch(totalPages, (value) => {
+  if (currentPage.value > value) {
+    currentPage.value = value
+  }
+})
+
+const getProductImage = (product: { id: number; slug: string }) => {
+  return `https://picsum.photos/seed/catalog-${product.id}-${product.slug}/720/480`
+}
+
 onMounted(async () => {
-  // Fetch tất cả data cần thiết khi component mount
-  await Promise.all([
-    productsStore.fetchProducts(),
-    categoriesStore.fetchCategories(),
-    suppliersStore.fetchSuppliers(),
-  ]);
-});
+  await Promise.all([categoriesStore.fetchCategories(), productsStore.fetchProducts()])
+})
 </script>
 
 <style scoped>
-.gradient-text {
-  background: linear-gradient(90deg, #00d4ff 0%, #ff00ff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.neon-text-secondary {
-  color: #ff00ff;
-  text-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
-}
-
-.hero-card {
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid rgba(148, 163, 184, 0.12) !important;
-}
-
-.hero-glow {
-  position: absolute;
-  top: -50%;
-  right: -10%;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(0, 212, 255, 0.08) 0%, transparent 70%);
-}
-
-.filter-card {
-  background: rgba(255, 255, 255, 0.03) !important;
-  border-color: rgba(148, 163, 184, 0.12) !important;
-}
-
-.search-field :deep(.v-field) {
-  background: rgba(255, 255, 255, 0.04) !important;
-}
-
 .product-card {
-  background: rgba(255, 255, 255, 0.03) !important;
-  border-color: rgba(148, 163, 184, 0.12) !important;
-  transition: all 0.3s ease;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
 }
 
 .product-card:hover {
-  border-color: rgba(0, 212, 255, 0.18) !important;
   transform: translateY(-4px);
-  box-shadow: 0 16px 28px rgba(2, 6, 23, 0.18);
+  box-shadow: 0 18px 40px rgba(44, 33, 28, 0.08);
 }
 
-.product-card:hover .product-title {
-  color: #00d4ff;
-}
-
-.product-card-list {
-  background: rgba(255, 255, 255, 0.03) !important;
-  border-color: rgba(148, 163, 184, 0.12) !important;
-  transition: all 0.3s ease;
-}
-
-.product-card-list:hover {
-  border-color: rgba(0, 212, 255, 0.18) !important;
-}
-
-.image-container {
-  position: relative;
-}
-
-.product-img {
-  transition: transform 0.4s ease;
-}
-
-.image-container:hover .product-img {
-  transform: scale(1.08);
-}
-
-.wishlist-btn {
-  background: rgba(2, 6, 23, 0.55) !important;
-  color: white !important;
-  opacity: 0;
-  transition: all 0.3s ease;
-}
-
-.image-container:hover .wishlist-btn {
-  opacity: 1;
-}
-
-.quick-actions {
-  position: absolute;
-  bottom: -50px;
-  left: 0;
-  right: 0;
-  background: rgba(2, 6, 23, 0.84);
-  transition: all 0.3s ease;
-}
-
-.image-container:hover .quick-actions {
-  bottom: 0;
-}
-
-.product-title {
-  transition: color 0.3s ease;
-}
-
-.empty-state {
-  background: rgba(255, 255, 255, 0.03) !important;
-  border-color: rgba(148, 163, 184, 0.12) !important;
-}
-
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.product-image {
+  border-bottom: 1px solid rgba(92, 66, 48, 0.08);
 }
 </style>

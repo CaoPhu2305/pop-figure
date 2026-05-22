@@ -1,114 +1,97 @@
-/**
- * plugins/vuetify.ts
- *
- * Framework documentation: https://vuetifyjs.com`
- */
-
-// Styles
 import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles'
 
-// Composables
 import { createVuetify } from 'vuetify'
 
-// Neon Theme Colors
-const neonLight = {
+const popFigureLight = {
   dark: false,
   colors: {
-    background: '#f8fafc',
-    surface: '#ffffff',
+    background: '#f5efe6',
+    surface: '#fffaf3',
     'surface-bright': '#ffffff',
-    'surface-light': '#f1f5f9',
-    'surface-variant': '#e2e8f0',
-    'on-surface-variant': '#334155',
-    primary: '#00d4ff',           // Cyan neon
-    'primary-darken-1': '#00b8db',
-    secondary: '#ff00ff',          // Magenta neon  
-    'secondary-darken-1': '#cc00cc',
-    accent: '#a855f7',             // Purple neon
-    error: '#ff4757',
-    info: '#00d4ff',
-    success: '#00ff88',            // Green neon
-    warning: '#ffdd00',            // Yellow neon
-    'on-primary': '#000000',
-    'on-secondary': '#ffffff',
+    'surface-light': '#fff7ed',
+    'surface-variant': '#e8ddd1',
+    'on-surface-variant': '#4b3f35',
+    primary: '#c44f2d',
+    'primary-darken-1': '#a33f20',
+    secondary: '#356d6b',
+    'secondary-darken-1': '#2d5b59',
+    accent: '#d9a441',
+    error: '#b42318',
+    info: '#1d6fa5',
+    success: '#2d7a4b',
+    warning: '#b9770e',
+    'on-primary': '#fffaf3',
+    'on-secondary': '#fffaf3',
   },
   variables: {
-    'border-color': '#e2e8f0',
-    'border-opacity': 0.12,
-    'high-emphasis-opacity': 0.87,
-    'medium-emphasis-opacity': 0.60,
-    'disabled-opacity': 0.38,
-    'idle-opacity': 0.04,
-    'hover-opacity': 0.04,
-    'focus-opacity': 0.12,
-    'selected-opacity': 0.08,
+    'border-color': '#e5d8c9',
+    'border-opacity': 0.42,
+    'high-emphasis-opacity': 0.92,
+    'medium-emphasis-opacity': 0.72,
+    'disabled-opacity': 0.34,
+    'idle-opacity': 0.06,
+    'hover-opacity': 0.08,
+    'focus-opacity': 0.14,
+    'selected-opacity': 0.12,
     'activated-opacity': 0.12,
     'pressed-opacity': 0.12,
     'dragged-opacity': 0.08,
-    'theme-kbd': '#212529',
-    'theme-on-kbd': '#FFFFFF',
-    'theme-code': '#F5F5F5',
-    'theme-on-code': '#000000',
   },
 }
 
-const neonDark = {
+const popFigureDark = {
   dark: true,
   colors: {
-    background: '#0a0a0f',
-    surface: '#12121a',
-    'surface-bright': '#1a1a25',
-    'surface-light': '#1e1e2d',
-    'surface-variant': '#2a2a3d',
-    'on-surface-variant': '#94a3b8',
-    primary: '#00d4ff',           // Cyan neon
-    'primary-darken-1': '#00b8db',
-    secondary: '#ff00ff',          // Magenta neon
-    'secondary-darken-1': '#cc00cc',
-    accent: '#a855f7',             // Purple neon
-    error: '#ff4757',
-    info: '#00d4ff',
-    success: '#00ff88',            // Green neon
-    warning: '#ffdd00',            // Yellow neon
-    'on-primary': '#000000',
-    'on-secondary': '#ffffff',
+    background: '#17110d',
+    surface: '#211813',
+    'surface-bright': '#2a1f19',
+    'surface-light': '#281d17',
+    'surface-variant': '#3a2b22',
+    'on-surface-variant': '#d8c8ba',
+    primary: '#f68b62',
+    'primary-darken-1': '#d46f46',
+    secondary: '#6ea7a2',
+    'secondary-darken-1': '#4f8984',
+    accent: '#efc15b',
+    error: '#ff7a6d',
+    info: '#74b5dd',
+    success: '#6cc98a',
+    warning: '#f0b15f',
+    'on-primary': '#1a120e',
+    'on-secondary': '#0e1414',
   },
   variables: {
-    'border-color': '#2a2a3d',
-    'border-opacity': 0.12,
-    'high-emphasis-opacity': 0.87,
-    'medium-emphasis-opacity': 0.60,
-    'disabled-opacity': 0.38,
-    'idle-opacity': 0.10,
-    'hover-opacity': 0.04,
-    'focus-opacity': 0.12,
-    'selected-opacity': 0.08,
+    'border-color': '#4a3930',
+    'border-opacity': 0.36,
+    'high-emphasis-opacity': 0.92,
+    'medium-emphasis-opacity': 0.72,
+    'disabled-opacity': 0.34,
+    'idle-opacity': 0.08,
+    'hover-opacity': 0.08,
+    'focus-opacity': 0.14,
+    'selected-opacity': 0.12,
     'activated-opacity': 0.12,
     'pressed-opacity': 0.12,
     'dragged-opacity': 0.08,
-    'theme-kbd': '#212529',
-    'theme-on-kbd': '#FFFFFF',
-    'theme-code': '#343434',
-    'theme-on-code': '#CCCCCC',
   },
 }
 
-// https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides
 export default createVuetify({
   theme: {
-    defaultTheme: 'neonDark',
+    defaultTheme: 'popFigureLight',
     themes: {
-      neonLight,
-      neonDark,
+      popFigureLight,
+      popFigureDark,
     },
   },
   defaults: {
     VBtn: {
-      style: 'text-transform: none;',
+      style: 'text-transform: none; letter-spacing: 0;',
+      rounded: 'lg',
     },
     VCard: {
-      rounded: 'lg',
+      rounded: 'xl',
     },
   },
 })

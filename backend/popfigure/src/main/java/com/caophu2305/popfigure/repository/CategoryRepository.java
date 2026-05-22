@@ -1,12 +1,7 @@
 package com.caophu2305.popfigure.repository;
 
-import java.util.Optional;
-
+import com.caophu2305.popfigure.entity.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.caophu2305.popfigure.entity.Category;
-
 public interface CategoryRepository extends JpaRepository<Category, Long> {
-    Optional<Category> findBySlug(String slug);
 }
-

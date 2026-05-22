@@ -13,6 +13,11 @@ declare module 'vue' {
   export interface GlobalComponents {
     AppFooter: typeof import('./components/AppFooter.vue')['default']
     AppHeader: typeof import('./components/AppHeader.vue')['default']
+    HomeCategories: typeof import('./components/home/HomeCategories.vue')['default']
+    HomeFeatured: typeof import('./components/home/HomeFeatured.vue')['default']
+    HomeFlashSale: typeof import('./components/home/HomeFlashSale.vue')['default']
+    HomeHero: typeof import('./components/home/HomeHero.vue')['default']
+    HomeNewsletter: typeof import('./components/home/HomeNewsletter.vue')['default']
     ProductCard: typeof import('./components/ProductCard.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

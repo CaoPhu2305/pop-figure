@@ -1,69 +1,58 @@
 package com.caophu2305.popfigure.service;
 
+import com.caophu2305.popfigure.dto.request.CategoryRequest;
+import com.caophu2305.popfigure.dto.response.CategoryResponse;
+import com.caophu2305.popfigure.entity.Category;
+import com.caophu2305.popfigure.exception.AppException;
+import com.caophu2305.popfigure.exception.ErrorCode;
+import com.caophu2305.popfigure.repository.CategoryRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
 import java.util.List;
 
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.caophu2305.popfigure.dto.category.CategoryRequest;
-import com.caophu2305.popfigure.dto.category.CategoryResponse;
-import com.caophu2305.popfigure.entity.Category;
-import com.caophu2305.popfigure.exception.ResourceNotFoundException;
-import com.caophu2305.popfigure.repository.CategoryRepository;
-
 @Service
-@Transactional
+@RequiredArgsConstructor
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
 
-    public CategoryService(CategoryRepository categoryRepository) {
-        this.categoryRepository = categoryRepository;
-    }
-
-    @Transactional(readOnly = true)
     public List<CategoryResponse> getAll() {
         return categoryRepository.findAll().stream().map(this::toResponse).toList();
     }
 
-    @Transactional(readOnly = true)
     public CategoryResponse getById(Long id) {
-        return toResponse(findEntity(id));
+        return categoryRepository.findById(id)
+                .map(this::toResponse)
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
     }
 
     public CategoryResponse create(CategoryRequest request) {
         Category category = new Category();
-        category.setName(request.name());
-        category.setSlug(request.slug());
-        return toResponse(categoryRepository.save(category));
+        category.setName(request.getName());
+        category.setSlug(request.getSlug());
+        category = categoryRepository.save(category);
+        return toResponse(category);
     }
 
     public CategoryResponse update(Long id, CategoryRequest request) {
-        Category category = findEntity(id);
-        category.setName(request.name());
-        category.setSlug(request.slug());
-        return toResponse(categoryRepository.save(category));
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+        category.setName(request.getName());
+        category.setSlug(request.getSlug());
+        category = categoryRepository.save(category);
+        return toResponse(category);
     }
 
     public void delete(Long id) {
-        Category category = findEntity(id);
-        categoryRepository.delete(category);
+        categoryRepository.deleteById(id);
     }
 
-    @Transactional(readOnly = true)
-    public Category findEntity(Long id) {
-        return categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id " + id));
-    }
-
-    private CategoryResponse toResponse(Category category) {
-        return new CategoryResponse(
-                category.getId(),
-                category.getName(),
-                category.getSlug(),
-                category.getCreatedAt(),
-                category.getUpdatedAt()
-        );
+    private CategoryResponse toResponse(Category c) {
+        return CategoryResponse.builder()
+                .id(c.getId())
+                .name(c.getName())
+                .slug(c.getSlug())
+                .build();
     }
 }
-

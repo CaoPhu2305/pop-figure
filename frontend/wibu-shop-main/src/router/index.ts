@@ -1,15 +1,7 @@
-/**
- * router/index.ts
- *
- * Automatic routes for `./src/pages/*.vue`
- */
-
-// Composables
 import { createRouter, createWebHistory } from 'vue-router'
 import { setupLayouts } from 'virtual:generated-layouts'
-import { useAuthStore } from '@/stores/auth.store'
 
-// import { routes } from 'vue-router/auto-routes'
+import { useAuthStore } from '@/stores/auth.store'
 
 type RouteMetaFlags = {
   requiresAuth?: boolean
@@ -18,21 +10,18 @@ type RouteMetaFlags = {
 }
 
 const routes = [
-  // Route Login - Không dùng layout (full page)
   {
     path: '/login',
     name: 'Login',
     component: () => import('@/pages/LoginPage.vue'),
-    meta: { guest: true }
+    meta: { guest: true },
   },
-  // Route Register
   {
     path: '/register',
     name: 'Register',
     component: () => import('@/pages/RegisterPage.vue'),
-    meta: { guest: true }
+    meta: { guest: true },
   },
-  // Routes chính với layout
   {
     path: '/',
     name: 'HomePage',
@@ -41,51 +30,56 @@ const routes = [
       {
         path: '',
         name: 'Home',
-        component: () => import('@/pages/HomePage.vue')
+        component: () => import('@/pages/HomePage.vue'),
       },
       {
-        path: '/productlist',
+        path: 'productlist',
         name: 'ProductList',
-        component: () => import('@/pages/ProductListPage.vue')
+        component: () => import('@/pages/ProductListPage.vue'),
       },
       {
-        path: '/product',
+        path: 'product',
         name: 'ProductDetail',
-        component: () => import('@/pages/ProductDetailPage.vue')
+        component: () => import('@/pages/ProductDetailPage.vue'),
       },
       {
-        path: '/cart',
-        name: 'Cart',
-        component: () => import('@/pages/CartPage.vue')
-      },
-      {
-        path: '/wishlist',
-        name: 'WishList',
-        component: () => import('@/pages/WishListPage.vue')
-      },
-      {
-        path: '/checkout',
-        name: 'Checkout',
-        component: () => import('@/pages/CheckoutPage.vue')
-        ,
-        meta: { requiresAuth: true }
-      },
-      {
-        path: '/profile',
-        name: 'Profile',
-        component: () => import('@/pages/ProfilePage.vue')
-        ,
-        meta: { requiresAuth: true }
-      },
-      {
-        path: '/order',
+        path: 'order',
         name: 'Order',
-        component: () => import('@/pages/OrderPage.vue')
-        ,
-        meta: { requiresAuth: true }
-      }
-    ]
-  }
+        component: () => import('@/pages/OrderPage.vue'),
+        meta: { requiresAuth: true },
+      },
+      {
+        path: 'profile',
+        name: 'Profile',
+        component: () => import('@/pages/ProfilePage.vue'),
+        meta: { requiresAuth: true },
+      },
+      {
+        path: 'admin',
+        name: 'Admin',
+        component: () => import('@/pages/AdminPage.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['ROLE_ADMIN', 'PRODUCT_MANAGE', 'CATEGORY_MANAGE', 'ORDER_VIEW', 'ORDER_MANAGE', 'USER_VIEW'],
+        },
+      },
+      {
+        path: 'cart',
+        name: 'Cart',
+        component: () => import('@/pages/CartPage.vue'),
+      },
+      {
+        path: 'checkout',
+        name: 'Checkout',
+        component: () => import('@/pages/CheckoutPage.vue'),
+      },
+      {
+        path: 'wishlist',
+        name: 'WishList',
+        component: () => import('@/pages/WishListPage.vue'),
+      },
+    ],
+  },
 ]
 
 const router = createRouter({
@@ -93,7 +87,6 @@ const router = createRouter({
   routes: setupLayouts(routes),
 })
 
-// Workaround for https://github.com/vitejs/vite/issues/11804
 router.onError((err, to) => {
   if (err?.message?.includes?.('Failed to fetch dynamically imported module')) {
     if (localStorage.getItem('vuetify:dynamic-reload')) {
@@ -108,17 +101,17 @@ router.onError((err, to) => {
   }
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const authStore = useAuthStore()
 
   if (!authStore.isInitialized) {
-    authStore.initialize()
+    await authStore.initialize()
   }
 
   const meta = to.meta as RouteMetaFlags
   const requiresAuth = Boolean(meta.requiresAuth)
   const guestOnly = Boolean(meta.guest)
-  const allowedRoles = Array.isArray(meta.roles) ? meta.roles : []
+  const requiredScopes = Array.isArray(meta.roles) ? meta.roles : []
 
   if (requiresAuth && !authStore.isAuthenticated) {
     return {
@@ -131,9 +124,14 @@ router.beforeEach((to) => {
     return { path: '/' }
   }
 
-  if (allowedRoles.length > 0) {
-    const roleName = authStore.user?.role_name?.toUpperCase()
-    if (!roleName || !allowedRoles.map((role) => role.toUpperCase()).includes(roleName)) {
+  if (requiredScopes.length > 0) {
+    const hasAccess = requiredScopes.some((scope) =>
+      scope.startsWith('ROLE_')
+        ? authStore.hasRole(scope.replace('ROLE_', ''))
+        : authStore.hasAuthority(scope),
+    )
+
+    if (!hasAccess) {
       return { path: '/', query: { denied: 'role' } }
     }
   }

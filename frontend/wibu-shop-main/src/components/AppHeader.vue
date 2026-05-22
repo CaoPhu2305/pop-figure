@@ -1,287 +1,222 @@
 <template>
-  <v-app-bar flat class="app-header px-md-4" height="72">
-    <!-- Logo -->
-    <v-btn to="/" variant="text" class="pa-0 h-auto" :ripple="false">
-      <div class="logo-container d-flex align-center justify-center px-4 py-2 rounded-xl">
-        <span class="text-h5 font-weight-bold neon-text-primary">Wibu</span>
-        <span class="text-h5 font-weight-black neon-text-secondary ml-1">Shop</span>
+  <v-app-bar class="app-header" height="82" flat>
+    <v-container class="header-inner" fluid>
+      <router-link to="/" class="brand-link">
+        <div class="brand-mark">
+          <v-icon size="20" color="white">mdi-cube</v-icon>
+        </div>
+        <div>
+          <div class="brand-title">PopFigure</div>
+          <div class="brand-subtitle">Collectible Store</div>
+        </div>
+      </router-link>
+
+      <div class="nav-desktop hidden-md-and-down">
+        <v-btn to="/" variant="text" class="nav-btn">Trang chủ</v-btn>
+        <v-btn to="/productlist" variant="text" class="nav-btn">Sản phẩm</v-btn>
+        <v-btn to="/order" variant="text" class="nav-btn">Đơn hàng</v-btn>
+        <v-btn v-if="isAdmin" to="/admin" variant="text" class="nav-btn">Quản trị</v-btn>
       </div>
-    </v-btn>
 
-    <v-spacer />
+      <v-responsive max-width="340" class="search-shell hidden-lg-and-down">
+        <v-text-field
+          v-model="searchQuery"
+          density="compact"
+          variant="outlined"
+          rounded="pill"
+          hide-details
+          prepend-inner-icon="mdi-magnify"
+          placeholder="Tìm sản phẩm..."
+          @keyup.enter="handleSearch"
+        />
+      </v-responsive>
 
-    <!-- Desktop Navigation -->
-    <div class="hidden-sm-and-down d-flex align-center ga-2">
-      <v-btn
-        to="/"
-        variant="text"
-        class="nav-link"
-        prepend-icon="mdi-home-variant-outline"
-      >
-        Home
-      </v-btn>
+      <div class="actions-wrap">
+        <v-btn
+          icon
+          variant="text"
+          class="hidden-lg-and-up"
+          @click="showMobileMenu = !showMobileMenu"
+        >
+          <v-icon>mdi-menu</v-icon>
+        </v-btn>
 
-      <v-btn
-        to="/productlist"
-        variant="text"
-        class="nav-link"
-        prepend-icon="mdi-store-outline"
-      >
-        Products
-      </v-btn>
-
-      <v-menu open-on-hover transition="slide-y-transition">
-        <template v-slot:activator="{ props }">
-          <v-btn
-            v-bind="props"
-            variant="text"
-            class="nav-link"
-            append-icon="mdi-chevron-down"
-          >
-            Danh mục
-          </v-btn>
+        <template v-if="isAuthenticated">
+          <v-menu>
+            <template #activator="{ props }">
+              <v-btn v-bind="props" variant="tonal" rounded="pill" class="profile-btn">
+                <v-avatar size="26" color="primary" class="mr-2">
+                  <span class="text-caption text-white font-weight-bold">{{ userInitials }}</span>
+                </v-avatar>
+                <span class="hidden-sm-and-down">{{ displayName }}</span>
+                <v-icon size="18" class="ml-1">mdi-chevron-down</v-icon>
+              </v-btn>
+            </template>
+            <v-list rounded="xl" class="surface-card" min-width="220">
+              <v-list-item to="/profile" title="Thông tin cá nhân" prepend-icon="mdi-account-circle-outline" />
+              <v-list-item to="/order" title="Đơn hàng của tôi" prepend-icon="mdi-receipt-text-outline" />
+              <v-list-item v-if="isAdmin" to="/admin" title="Khu vực quản trị" prepend-icon="mdi-shield-crown-outline" />
+              <v-divider class="my-1" />
+              <v-list-item title="Đăng xuất" prepend-icon="mdi-logout" @click="handleLogout" />
+            </v-list>
+          </v-menu>
         </template>
-        <v-list class="neon-dropdown" rounded="lg" elevation="16">
-          <v-list-item
-            v-for="category in categoryQuickLinks"
-            :key="category.to"
-            :to="category.to"
-            :title="category.label"
-            class="dropdown-item"
-          />
-        </v-list>
-      </v-menu>
-    </div>
 
-    <!-- Search Box -->
-    <v-responsive max-width="360" class="mx-4 hidden-sm-and-down">
-      <v-text-field
-        v-model="searchQuery"
-        prepend-inner-icon="mdi-magnify"
-        placeholder="Tìm kiếm figure anime..."
-        variant="outlined"
-        hide-details
-        rounded="xl"
-        density="compact"
-        class="search-field"
-        bg-color="surface-variant"
-        @keyup.enter="handleSearch"
-      />
-    </v-responsive>
-
-    <v-spacer />
-
-    <!-- Action Buttons -->
-    <div class="d-flex align-center ga-1">
-      <!-- Notifications -->
-      <v-btn v-if="isAuthenticated" icon variant="text" class="action-btn" @click="toggleNotifications">
-        <v-badge :content="userUnreadCount" color="secondary" :model-value="userUnreadCount > 0">
-          <v-icon>mdi-bell-outline</v-icon>
-        </v-badge>
-      </v-btn>
-
-      <!-- Wishlist -->
-      <v-btn icon :to="{ name: 'WishList', query: { id: 1 } }" variant="text" class="action-btn">
-        <v-badge :content="wishlistCount" color="secondary" :model-value="wishlistCount > 0">
-          <v-icon>mdi-heart-outline</v-icon>
-        </v-badge>
-      </v-btn>
-
-      <!-- Cart -->
-      <v-btn icon :to="{ name: 'Cart', query: { id: 1 } }" variant="text" class="action-btn">
-        <v-badge :content="cartCount" color="secondary" :model-value="cartCount > 0">
-          <v-icon>mdi-shopping-outline</v-icon>
-        </v-badge>
-      </v-btn>
-
-      <!-- User Menu -->
-      <v-menu v-if="isAuthenticated">
-        <template v-slot:activator="{ props }">
-          <v-btn v-bind="props" class="ml-2 user-btn" variant="outlined" rounded="xl">
-            <v-avatar size="24" color="primary" class="mr-2">
-              <span class="text-caption text-black font-weight-bold">{{ userInitials }}</span>
-            </v-avatar>
-            <span class="hidden-sm-and-down mr-1">{{ displayName }}</span>
-            <v-icon size="small">mdi-chevron-down</v-icon>
-          </v-btn>
-        </template>
-        <v-list class="neon-dropdown" rounded="lg" min-width="180" elevation="10">
-          <v-list-item to="/profile" title="Hồ sơ" prepend-icon="mdi-account-circle" class="dropdown-item" />
-          <v-list-item to="/order" title="Đơn hàng" prepend-icon="mdi-package-variant" class="dropdown-item" />
-          <v-divider class="my-1" />
-          <v-list-item @click="handleLogout" title="Đăng xuất" prepend-icon="mdi-logout" class="dropdown-item text-error" />
-        </v-list>
-      </v-menu>
-
-      <v-btn v-else to="/login" variant="flat" color="primary" class="ml-2" rounded="xl" size="small">
-        Đăng nhập
-      </v-btn>
-
-      <!-- Mobile Menu Toggle -->
-      <v-app-bar-nav-icon class="hidden-md-and-up" @click="showMobileMenu = !showMobileMenu" />
-    </div>
+        <v-btn v-else to="/login" color="primary" rounded="pill" class="login-btn">
+          Đăng nhập
+        </v-btn>
+      </div>
+    </v-container>
   </v-app-bar>
 
-  <!-- Mobile Navigation Drawer -->
   <v-navigation-drawer v-model="showMobileMenu" location="right" temporary class="mobile-drawer">
-    <v-list class="pa-4">
-      <v-list-item to="/" title="Trang chủ" prepend-icon="mdi-home" class="dropdown-item mb-2" />
-      <v-list-item :to="{ name: 'ProductList' }" title="Sản phẩm" prepend-icon="mdi-store" class="dropdown-item mb-2" />
-      <v-list-item :to="{ name: 'WishList' }" title="Yêu thích" prepend-icon="mdi-heart" class="dropdown-item mb-2" />
-      <v-list-item :to="{ name: 'Cart' }" title="Giỏ hàng" prepend-icon="mdi-cart" class="dropdown-item mb-2" />
-      <v-divider class="my-4" />
+    <div class="pa-4">
       <v-text-field
         v-model="searchQuery"
         prepend-inner-icon="mdi-magnify"
-        placeholder="Tìm kiếm..."
+        placeholder="Tìm theo tên, slug"
         variant="outlined"
         rounded="lg"
         density="compact"
         hide-details
-        class="search-field"
+        class="mb-4"
         @keyup.enter="handleSearch"
       />
-    </v-list>
+
+      <v-list nav>
+        <v-list-item to="/" title="Trang chủ" prepend-icon="mdi-home-variant-outline" />
+        <v-list-item to="/productlist" title="Sản phẩm" prepend-icon="mdi-view-grid-outline" />
+        <v-list-item to="/order" title="Đơn hàng" prepend-icon="mdi-receipt-text-outline" />
+        <v-list-item v-if="isAdmin" to="/admin" title="Quản trị" prepend-icon="mdi-shield-crown-outline" />
+        <v-divider class="my-3" />
+        <v-list-subheader>Danh mục</v-list-subheader>
+        <v-list-item
+          v-for="category in categoryLinks"
+          :key="category.id"
+          :to="{ path: '/productlist', query: { category: category.id } }"
+          :title="category.name"
+          :subtitle="category.slug"
+        />
+      </v-list>
+    </div>
   </v-navigation-drawer>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth.store';
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-const router = useRouter();
-const authStore = useAuthStore();
+import { useAuthStore } from '@/stores/auth.store'
+import { useCategoriesStore } from '@/stores/categories.store'
 
-// Computed từ auth store
-const isAuthenticated = computed(() => authStore.isAuthenticated);
-const currentUser = computed(() => authStore.user);
+const router = useRouter()
+const authStore = useAuthStore()
+const categoriesStore = useCategoriesStore()
 
-// Lấy chữ cái đầu để hiển thị avatar
-const userInitials = computed(() => {
-  if (!currentUser.value?.full_name) return 'U';
-  return currentUser.value.full_name
-    .split(' ')
-    .map(n => n[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-});
+const showMobileMenu = ref(false)
+const searchQuery = ref('')
 
-// Tên hiển thị
-const displayName = computed(() => {
-  return currentUser.value?.full_name || currentUser.value?.name || 'User';
-});
-
-// Mock data cho cart/wishlist (bạn sẽ config sau)
-const cartCount = ref(0);
-const wishlistCount = ref(0);
-const userUnreadCount = ref(0);
-
-const searchQuery = ref('');
-const showMobileMenu = ref(false);
-
-const categoryQuickLinks = [
-  { label: '🎭 Figures', to: '/productlist?category=figures' },
-  { label: '🐣 Nendoroids', to: '/productlist?category=nendoroids' },
-  { label: '🧸 Plushies', to: '/productlist?category=plushies' },
-  { label: '🤖 Figma', to: '/productlist?category=figma' },
-];
+const isAuthenticated = computed(() => authStore.isAuthenticated)
+const isAdmin = computed(() => authStore.isAdmin)
+const displayName = computed(() => authStore.displayName)
+const userInitials = computed(() => authStore.initials)
+const categoryLinks = computed(() => categoriesStore.categories.slice(0, 10))
 
 const handleSearch = () => {
-  if (searchQuery.value.trim()) {
-    router.push({ path: '/productlist', query: { search: searchQuery.value } });
-  }
-};
+  const keyword = searchQuery.value.trim()
+  router.push({
+    path: '/productlist',
+    query: keyword ? { search: keyword } : {},
+  })
+  showMobileMenu.value = false
+}
 
-const handleLogout = () => {
-  authStore.logout();
-  router.push('/login');
-};
+const handleLogout = async () => {
+  await authStore.logout()
+  router.push('/login')
+}
 
-const toggleNotifications = () => {
-  alert('Mở danh sách thông báo');
-};
-
-// Khởi tạo auth store khi component mount
-onMounted(() => {
-  authStore.initialize();
-});
+onMounted(async () => {
+  await authStore.initialize()
+  await categoriesStore.fetchCategories()
+})
 </script>
 
 <style scoped>
 .app-header {
-  background: rgba(11, 16, 32, 0.92) !important;
-  backdrop-filter: blur(18px);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12) !important;
+  background: rgba(255, 250, 243, 0.94) !important;
+  border-bottom: 1px solid rgba(92, 66, 48, 0.14) !important;
+  backdrop-filter: blur(14px);
 }
 
-.logo-container {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  transition: all 0.3s ease;
+.header-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.logo-container:hover {
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.25);
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
 }
 
-.nav-link {
-  color: rgba(226, 232, 240, 0.82) !important;
-  transition: all 0.3s ease;
+.brand-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #c44f2d 0%, #356d6b 100%);
 }
 
-.nav-link:hover {
-  color: #00d4ff !important;
+.brand-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.1;
 }
 
-.search-field :deep(.v-field) {
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid rgba(148, 163, 184, 0.12);
+.brand-subtitle {
+  font-size: 0.72rem;
+  color: rgba(75, 63, 53, 0.74);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
-.search-field :deep(.v-field:focus-within) {
-  border-color: rgba(0, 212, 255, 0.35);
-  box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.12);
+.nav-desktop {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
 }
 
-.action-btn {
-  color: rgba(226, 232, 240, 0.78) !important;
-  transition: all 0.3s ease;
+.nav-btn {
+  font-weight: 600;
 }
 
-.action-btn:hover {
-  color: #00d4ff !important;
+.search-shell {
+  margin-left: auto;
+  margin-right: 6px;
 }
 
-.user-btn {
-  border-color: rgba(148, 163, 184, 0.18) !important;
-  color: rgba(226, 232, 240, 0.9) !important;
+.actions-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.user-btn:hover {
-  border-color: rgba(0, 212, 255, 0.35) !important;
-  background: rgba(0, 212, 255, 0.08) !important;
+.profile-btn {
+  max-width: 230px;
 }
 
-.neon-dropdown {
-  background: rgba(17, 22, 42, 0.98) !important;
-  border: 1px solid rgba(148, 163, 184, 0.12) !important;
-  box-shadow: 0 12px 32px rgba(2, 6, 23, 0.35) !important;
-}
-
-.dropdown-item {
-  border-radius: 8px;
-  margin: 2px 8px;
-  transition: all 0.2s ease;
-}
-
-.dropdown-item:hover {
-  background: rgba(0, 212, 255, 0.08) !important;
+.login-btn {
+  font-weight: 700;
 }
 
 .mobile-drawer {
-  background: rgba(11, 16, 32, 0.98) !important;
+  background: rgba(255, 250, 243, 0.98);
 }
 </style>

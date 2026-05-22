@@ -1,63 +1,81 @@
 package com.caophu2305.popfigure.controller;
 
-import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.caophu2305.popfigure.dto.product.ProductDetailResponse;
-import com.caophu2305.popfigure.dto.product.ProductRequest;
-import com.caophu2305.popfigure.dto.product.ProductResponse;
+import com.caophu2305.popfigure.dto.request.ProductRequest;
+import com.caophu2305.popfigure.dto.response.ApiResponse;
+import com.caophu2305.popfigure.dto.response.ProductResponse;
 import com.caophu2305.popfigure.service.ProductService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
+import java.util.List;
 
 @RestController
-@RequestMapping("/api/products")
+@RequestMapping("/products")
+@RequiredArgsConstructor
 public class ProductController {
 
     private final ProductService productService;
 
-    public ProductController(ProductService productService) {
-        this.productService = productService;
-    }
-
+    /**
+     * Xem tất cả sản phẩm — public
+     */
     @GetMapping
-    public ResponseEntity<Page<ProductResponse>> getAll(
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) Long categoryId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size
-    ) {
-        return ResponseEntity.ok(productService.search(search, categoryId, page, size));
+    public ApiResponse<List<ProductResponse>> getAll() {
+        return ApiResponse.<List<ProductResponse>>builder()
+                .result(productService.getAll())
+                .build();
     }
 
+    /**
+     * Xem chi tiết sản phẩm — public
+     */
     @GetMapping("/{id}")
-    public ResponseEntity<ProductDetailResponse> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(productService.getById(id));
+    public ApiResponse<ProductResponse> getById(@PathVariable Long id) {
+        return ApiResponse.<ProductResponse>builder()
+                .result(productService.getById(id))
+                .build();
     }
 
+    /**
+     * Xem sản phẩm theo danh mục — public
+     */
+    @GetMapping("/category/{categoryId}")
+    public ApiResponse<List<ProductResponse>> getByCategory(@PathVariable Long categoryId) {
+        return ApiResponse.<List<ProductResponse>>builder()
+                .result(productService.getByCategory(categoryId))
+                .build();
+    }
+
+    /**
+     * Tạo sản phẩm mới — yêu cầu PRODUCT_MANAGE (ADMIN)
+     */
     @PostMapping
-    public ResponseEntity<ProductResponse> create(@Valid @RequestBody ProductRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(productService.create(request));
+    @PreAuthorize("hasAuthority('PRODUCT_MANAGE')")
+    public ApiResponse<ProductResponse> create(@RequestBody ProductRequest request) {
+        return ApiResponse.<ProductResponse>builder()
+                .result(productService.create(request))
+                .build();
     }
 
+    /**
+     * Cập nhật sản phẩm — yêu cầu PRODUCT_MANAGE (ADMIN)
+     */
     @PutMapping("/{id}")
-    public ResponseEntity<ProductResponse> update(@PathVariable Long id, @Valid @RequestBody ProductRequest request) {
-        return ResponseEntity.ok(productService.update(id, request));
+    @PreAuthorize("hasAuthority('PRODUCT_MANAGE')")
+    public ApiResponse<ProductResponse> update(@PathVariable Long id, @RequestBody ProductRequest request) {
+        return ApiResponse.<ProductResponse>builder()
+                .result(productService.update(id, request))
+                .build();
     }
 
+    /**
+     * Xóa sản phẩm — yêu cầu PRODUCT_MANAGE (ADMIN)
+     */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    @PreAuthorize("hasAuthority('PRODUCT_MANAGE')")
+    public ApiResponse<Void> delete(@PathVariable Long id) {
         productService.delete(id);
-        return ResponseEntity.noContent().build();
+        return ApiResponse.<Void>builder().build();
     }
 }

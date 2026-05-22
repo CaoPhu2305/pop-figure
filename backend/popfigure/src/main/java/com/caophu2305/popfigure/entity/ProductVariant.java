@@ -1,49 +1,53 @@
 package com.caophu2305.popfigure.entity;
 
-import java.math.BigDecimal;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+import java.util.List;
+
+@Entity
 @Getter
 @Setter
-@Entity
-@Table(name = "product_variants", uniqueConstraints = {
-        @UniqueConstraint(name = "UQ_product_variants_sku", columnNames = "sku")
-})
-public class ProductVariant extends BaseEntity {
+@Table
+public class ProductVariant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
-
-    @Column(nullable = false, length = 100)
-    private String name;
-
-    @Column(nullable = false, length = 100, unique = true)
+    @NotBlank
+    @Column(unique = true)
     private String sku;
 
-    @Column(nullable = false, precision = 10, scale = 2)
+    @NotBlank
+    private String name;
+
+    @NotBlank
+    private Integer boxNumber;
+
+    @NotBlank
     private BigDecimal price;
 
-    @Column(name = "original_price", precision = 10, scale = 2)
-    private BigDecimal originalPrice;
+    @NotBlank
+    private BigDecimal salePrice;
 
-    @Column(name = "image_url", length = 500)
-    private String imageUrl;
+    @NotBlank
+    private String imageURL;
+
+    @ManyToOne
+    @JoinColumn(name = "product_id")
+    private Product product;
+
+    @OneToMany(mappedBy = "productVariant")
+    private List<Inventories> inventories;
+
+    @OneToMany(mappedBy = "productVariant")
+    private List<CartItem> cartItems;
+
+    @OneToMany(mappedBy = "productVariant")
+    private List<OrderDetail> orderDetails;
+
 }
-

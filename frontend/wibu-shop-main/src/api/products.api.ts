@@ -1,43 +1,41 @@
-import apiClient from '@/api/index.ts';
+import apiClient from '@/api/index'
+import type { ApiResponse, ProductResponse } from '@/types'
+
+export type ProductPayload = {
+  name: string
+  slug: string
+  description: string
+  isVaulted?: boolean
+  categoryId?: number | null
+}
 
 export const productsApi = {
-  /**
-   * Lấy tất cả sản phẩm
-   */
-  getAll: (params?: {
-    search?: string;
-    categoryId?: number;
-    page?: number;
-    size?: number;
-  }) => {
-    return apiClient.get('/products', { params });
+  getAll(params?: {
+    categoryId?: number
+    search?: string
+  }) {
+    return apiClient.get<ApiResponse<ProductResponse[]>>('/products', { params })
   },
 
-  /**
-   * Lấy sản phẩm theo ID
-   */
-  getById: (id: number) => {
-    return apiClient.get(`/products/${id}`);
+  getById(id: number) {
+    return apiClient.get<ApiResponse<ProductResponse>>(`/products/${id}`)
   },
 
-  /**
-   * Lấy sản phẩm theo category
-   */
-  getByCategory: (categoryId: number) => {
-    return apiClient.get('/products', {
-      params: { categoryId },
-    });
+  getByCategory(categoryId: number) {
+    return apiClient.get<ApiResponse<ProductResponse[]>>(`/products/category/${categoryId}`)
   },
 
-  /**
-   * Tìm kiếm sản phẩm
-   */
-  search: (keyword: string) => {
-    return apiClient.get('/products', {
-      params: { search: keyword }
-    });
+  create(payload: ProductPayload) {
+    return apiClient.post<ApiResponse<ProductResponse>>('/products', payload)
   },
-};
 
-export default productsApi;
+  update(id: number, payload: ProductPayload) {
+    return apiClient.put<ApiResponse<ProductResponse>>(`/products/${id}`, payload)
+  },
 
+  delete(id: number) {
+    return apiClient.delete<ApiResponse<void>>(`/products/${id}`)
+  },
+}
+
+export default productsApi

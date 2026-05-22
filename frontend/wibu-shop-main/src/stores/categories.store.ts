@@ -1,69 +1,61 @@
-/**
- * Categories Store
- * Quản lý state của danh mục
- */
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
-import categoriesApi from '@/api/categories.api';
-import { mockCategories } from '@/data/mockCatalog';
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
 
-export interface Category {
-    Id: number;
-    Name: string;
-    Slug?: string;
-    Description?: string;
-}
+import categoriesApi from '@/api/categories.api'
+import type { CategoryResponse } from '@/types'
+
+const fallbackCategories: CategoryResponse[] = []
 
 export const useCategoriesStore = defineStore('categories', () => {
-    // ========== STATE ==========
-    const categories = ref<Category[]>([]);
-    const isLoading = ref(false);
-    const error = ref('');
+  const categories = ref<CategoryResponse[]>([])
+  const isLoading = ref(false)
+  const error = ref('')
 
-    // ========== GETTERS ==========
-    const hasCategories = computed(() => categories.value.length > 0);
+  const hasCategories = computed(() => categories.value.length > 0)
 
-    // Chuyển đổi cho v-select (id, name)
-    const categoryOptions = computed(() =>
-        categories.value.map(c => ({
-            id: c.Id,
-            name: c.Name
-        }))
-    );
+  const categoryOptions = computed(() =>
+    categories.value.map((category) => ({
+      id: category.id,
+      name: category.name,
+    })),
+  )
 
-    // ========== ACTIONS ==========
-    const fetchCategories = async () => {
-        // Không fetch lại nếu đã có data
-        if (categories.value.length > 0) return;
+  const normalize = (items: CategoryResponse[]) =>
+    items.map((item) => ({
+      ...item,
+      id: item.id ?? item.Id ?? 0,
+      name: item.name ?? item.Name ?? '',
+      slug: item.slug ?? item.Slug ?? '',
+      Id: item.id ?? item.Id ?? 0,
+      Name: item.name ?? item.Name ?? '',
+      Slug: item.slug ?? item.Slug ?? '',
+    }))
 
-        isLoading.value = true;
-        error.value = '';
-        try {
-            const response = await categoriesApi.getAll();
-            const data = response.data?.data ?? response.data ?? [];
-            categories.value = Array.isArray(data) && data.length > 0
-                ? data.map((item: any) => ({
-                    Id: item.id ?? item.Id,
-                    Name: item.name ?? item.Name,
-                    Slug: item.slug ?? item.Slug,
-                    Description: item.description ?? item.Description,
-                }))
-                : mockCategories;
-        } catch {
-            categories.value = mockCategories;
-        }
-        isLoading.value = false;
-    };
+  const fetchCategories = async () => {
+    if (categories.value.length > 0) return
 
-    return {
-        // State
-        categories,
-        isLoading,
-        error,
-        // Getters
-        hasCategories,
-        categoryOptions,
-        // Actions
-        fetchCategories,
-    };
-});
+    isLoading.value = true
+    error.value = ''
+
+    try {
+      const response = await categoriesApi.getAll()
+      const payload = response.data?.result
+      const items = Array.isArray(payload) ? normalize(payload as CategoryResponse[]) : []
+      categories.value = items.length > 0 ? items : fallbackCategories
+    } catch (err) {
+      error.value = (err as Error).message || 'Không thể tải danh mục'
+      categories.value = fallbackCategories
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  return {
+    categories,
+    isLoading,
+    error,
+    hasCategories,
+    categoryOptions,
+    fetchCategories,
+  }
+})

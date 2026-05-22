@@ -1,23 +1,31 @@
-/**
- * Categories API Service
- * API cho danh mục sản phẩm
- */
-import apiClient from '@/api/index';
+import apiClient from '@/api/index'
+import type { ApiResponse, CategoryResponse } from '@/types'
+
+export type CategoryPayload = {
+  name: string
+  slug: string
+}
 
 export const categoriesApi = {
-    /**
-     * Lấy tất cả danh mục
-     */
-    getAll: () => {
-        return apiClient.get('/categories');
-    },
+  getAll() {
+    return apiClient.get<ApiResponse<CategoryResponse[]>>('/categories')
+  },
 
-    /**
-     * Lấy danh mục theo ID
-     */
-    getById: (id: number) => {
-        return apiClient.get(`/categories/${id}`);
-    },
-};
+  getById(id: number) {
+    return apiClient.get<ApiResponse<CategoryResponse>>(`/categories/${id}`)
+  },
 
-export default categoriesApi;
+  create(payload: CategoryPayload) {
+    return apiClient.post<ApiResponse<CategoryResponse>>('/categories', payload)
+  },
+
+  update(id: number, payload: CategoryPayload) {
+    return apiClient.put<ApiResponse<CategoryResponse>>(`/categories/${id}`, payload)
+  },
+
+  delete(id: number) {
+    return apiClient.delete<ApiResponse<void>>(`/categories/${id}`)
+  },
+}
+
+export default categoriesApi
