@@ -2,90 +2,55 @@
   <v-main class="login-shell">
     <v-container class="fill-height py-8" fluid>
       <v-row align="center" justify="center">
-        <v-col cols="12" md="11" lg="10" xl="9">
+        <v-col cols="12" sm="10" md="8" lg="6" xl="5">
           <v-card class="surface-card overflow-hidden login-frame">
-            <v-row no-gutters>
-              <v-col cols="12" lg="5" class="hero-pane pa-8 pa-lg-10">
-                <div class="text-overline section-heading mb-3">PopFigure access</div>
-                <h1 class="text-h4 font-weight-black mb-4">Dang nhap vao he thong</h1>
-                <p class="muted-copy mb-6">
-                  Dung ten dang nhap hoac email, sau do nhap mat khau de tiep tuc.
-                </p>
-                <div class="d-flex flex-column ga-3">
-                  <v-card variant="outlined" class="pa-3 mini-hint">
-                    <div class="text-caption muted-copy">Tai khoan mau</div>
-                    <div class="font-weight-bold">admin / admin@popfigure.local</div>
-                  </v-card>
-                  <v-card variant="outlined" class="pa-3 mini-hint">
-                    <div class="text-caption muted-copy">Mat khau mau</div>
-                    <div class="font-weight-bold">Admin123!</div>
-                  </v-card>
+            <div class="hero-pane pa-8 pa-lg-10 text-center">
+              <v-avatar color="primary" size="62" rounded="xl" class="mb-4">
+                <v-icon color="white" size="30">mdi-account-circle-outline</v-icon>
+              </v-avatar>
+              <h1 class="text-h4 font-weight-black mb-2">Đăng nhập tài khoản</h1>
+              <p class="muted-copy mb-0">Đăng nhập để quản lý đơn hàng và tiếp tục mua sắm.</p>
+            </div>
+
+            <div class="form-pane pa-8 pa-lg-10">
+              <v-form @submit.prevent="handleLogin">
+                <v-text-field
+                  v-model="form.name"
+                  label="Tên đăng nhập hoặc email"
+                  variant="outlined"
+                  rounded="xl"
+                  class="mb-4"
+                  prepend-inner-icon="mdi-account-outline"
+                  autocomplete="username"
+                />
+
+                <v-text-field
+                  v-model="form.password"
+                  :type="showPassword ? 'text' : 'password'"
+                  label="Mật khẩu"
+                  variant="outlined"
+                  rounded="xl"
+                  class="mb-3"
+                  prepend-inner-icon="mdi-lock-outline"
+                  :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                  autocomplete="current-password"
+                  @click:append-inner="showPassword = !showPassword"
+                />
+
+                <div class="d-flex justify-space-between mb-4 text-caption">
+                  <span class="muted-copy">Chưa có tài khoản?</span>
+                  <router-link to="/register" class="text-decoration-none">Đăng ký ngay</router-link>
                 </div>
-              </v-col>
 
-              <v-col cols="12" lg="7" class="form-pane pa-8 pa-lg-10">
-                <div class="d-flex align-center justify-space-between mb-6">
-                  <div>
-                    <h2 class="text-h5 font-weight-bold mb-1">Welcome back</h2>
-                    <p class="muted-copy mb-0">Nhap thong tin tai khoan de tiep tuc.</p>
-                  </div>
-                  <v-avatar color="primary" size="44" rounded="xl">
-                    <v-icon color="white">mdi-lock-check-outline</v-icon>
-                  </v-avatar>
-                </div>
+                <v-alert v-if="errorMessage" type="error" variant="tonal" class="mb-4">
+                  {{ errorMessage }}
+                </v-alert>
 
-                <v-form @submit.prevent="handleLogin">
-                  <v-text-field
-                    v-model="form.name"
-                    label="Ten dang nhap hoac email"
-                    variant="outlined"
-                    rounded="xl"
-                    class="mb-4"
-                    prepend-inner-icon="mdi-account-outline"
-                    autocomplete="username"
-                  />
-
-                  <v-text-field
-                    v-model="form.password"
-                    :type="showPassword ? 'text' : 'password'"
-                    label="Mat khau"
-                    variant="outlined"
-                    rounded="xl"
-                    class="mb-2"
-                    prepend-inner-icon="mdi-lock-outline"
-                    :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                    autocomplete="current-password"
-                    @click:append-inner="showPassword = !showPassword"
-                  />
-
-                  <div class="d-flex justify-end mb-4">
-                    <router-link to="/register" class="text-caption text-decoration-none">
-                      Chua co tai khoan?
-                    </router-link>
-                  </div>
-
-                  <v-alert v-if="errorMessage" type="error" variant="tonal" class="mb-4">
-                    {{ errorMessage }}
-                  </v-alert>
-
-                  <v-btn
-                    type="submit"
-                    block
-                    size="large"
-                    color="primary"
-                    :loading="authStore.isLoading"
-                    rounded="xl"
-                    class="mb-4"
-                  >
-                    Dang nhap
-                  </v-btn>
-
-                  <div class="text-center muted-copy text-caption">
-                    Dang nhap thanh cong se duoc chuyen huong ve trang ban dang mo.
-                  </div>
-                </v-form>
-              </v-col>
-            </v-row>
+                <v-btn type="submit" block size="large" color="primary" :loading="authStore.isLoading" rounded="xl">
+                  Đăng nhập
+                </v-btn>
+              </v-form>
+            </div>
           </v-card>
         </v-col>
       </v-row>
@@ -103,32 +68,23 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
-const form = reactive({
-  name: '',
-  password: '',
-})
-
+const form = reactive({ name: '', password: '' })
 const showPassword = ref(false)
 const errorMessage = ref('')
 
 const handleLogin = async () => {
   errorMessage.value = ''
-
   if (!form.name.trim() || !form.password.trim()) {
-    errorMessage.value = 'Vui long nhap day du tai khoan va mat khau.'
+    errorMessage.value = 'Vui lòng nhập đầy đủ tài khoản và mật khẩu.'
     return
   }
 
   try {
-    await authStore.login({
-      name: form.name.trim(),
-      password: form.password,
-    })
-
+    await authStore.login({ name: form.name.trim(), password: form.password })
     const redirect = String(route.query.redirect ?? '/')
     router.replace(redirect)
   } catch (error) {
-    errorMessage.value = (error as Error).message || 'Dang nhap that bai.'
+    errorMessage.value = (error as Error).message || 'Đăng nhập thất bại.'
   }
 }
 </script>
@@ -136,25 +92,15 @@ const handleLogin = async () => {
 <style scoped>
 .login-shell {
   background:
-    radial-gradient(circle at top right, rgba(196, 79, 45, 0.12), transparent 36%),
-    radial-gradient(circle at bottom left, rgba(53, 109, 107, 0.12), transparent 32%);
+    radial-gradient(circle at top right, rgba(196, 79, 45, 0.1), transparent 32%),
+    radial-gradient(circle at bottom left, rgba(53, 109, 107, 0.1), transparent 30%);
 }
 
-.login-frame {
-  border-radius: 28px;
-}
+.login-frame { border-radius: 24px; }
 
 .hero-pane {
-  background:
-    linear-gradient(160deg, rgba(196, 79, 45, 0.12), rgba(53, 109, 107, 0.08)),
-    rgba(255, 250, 243, 0.6);
+  background: linear-gradient(165deg, rgba(196, 79, 45, 0.1), rgba(53, 109, 107, 0.08));
 }
 
-.form-pane {
-  background: rgba(255, 250, 243, 0.92);
-}
-
-.mini-hint {
-  background: rgba(255, 255, 255, 0.4);
-}
+.form-pane { background: rgba(255, 252, 246, 0.92); }
 </style>

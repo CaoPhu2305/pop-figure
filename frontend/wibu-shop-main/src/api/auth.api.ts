@@ -15,7 +15,7 @@ export type RefreshRequest = {
 
 export const authApi = {
   login(payload: LoginRequest) {
-    return apiClient.post<ApiResponse<AuthResponse>>('/auth/log-in', payload)
+    return apiClient.post<ApiResponse<AuthResponse>>('/auth/login', payload)
   },
 
   introspect(payload: IntrospectRequest) {

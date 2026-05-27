@@ -9,21 +9,19 @@
             </v-avatar>
             <div>
               <div class="text-overline muted-copy">PopFigure</div>
-              <div class="text-h6 font-weight-bold">Catalog and operations hub</div>
+              <div class="text-h6 font-weight-bold">Storefront for collectors</div>
             </div>
           </div>
           <p class="muted-copy mb-0" style="max-width: 480px;">
-            Giao diện này được thiết kế lại để bám sát dữ liệu thật trong database:
-            sản phẩm, danh mục, đơn hàng, người dùng, vai trò và quyền truy cập.
+            Cửa hàng mô hình và đồ sưu tầm dành cho cộng đồng anime.
+            Trải nghiệm mua sắm tập trung vào giới thiệu sản phẩm và khám phá catalog.
           </p>
         </v-col>
 
         <v-col cols="12" md="7" class="d-flex justify-md-end">
           <div class="d-flex flex-wrap ga-2 footer-links justify-md-end">
             <v-chip to="/" variant="tonal" color="primary" size="small">Trang chủ</v-chip>
-            <v-chip to="/productlist" variant="tonal" color="primary" size="small">Catalog</v-chip>
-            <v-chip to="/order" variant="tonal" color="primary" size="small">Đơn hàng</v-chip>
-            <v-chip to="/profile" variant="tonal" color="primary" size="small">Hồ sơ</v-chip>
+            <v-chip to="/products" variant="tonal" color="primary" size="small">Sản phẩm</v-chip>
           </div>
         </v-col>
       </v-row>
@@ -31,10 +29,10 @@
       <v-divider class="mb-6" />
 
       <div class="d-flex flex-column flex-md-row justify-space-between align-center text-caption muted-copy gap-2">
-        <p class="mb-0">© 2026 PopFigure. UI rebuilt for the current backend schema.</p>
+        <p class="mb-0">© 2026 PopFigure. All rights reserved.</p>
         <div class="d-flex ga-4">
-          <span>Backend: Spring Boot</span>
-          <span>Frontend: Vue 3 + Vuetify</span>
+          <span>Curated collectibles</span>
+          <span>Built with Vue 3 + Vuetify</span>
         </div>
       </div>
     </v-container>

@@ -56,7 +56,7 @@ public class DataInitializer implements CommandLineRunner {
                         "CATEGORY_VIEW", "CATEGORY_MANAGE", "ORDER_VIEW", "ORDER_MANAGE", "ROLE_MANAGE");
 
         private static final List<String> USER_PERMISSIONS = List.of(
-                        "PRODUCT_VIEW", "CATEGORY_VIEW", "ORDER_VIEW");
+                        "PRODUCT_VIEW", "CATEGORY_VIEW");
 
         // ─────────────────────────────────────────────
         // Entry point
@@ -69,7 +69,6 @@ public class DataInitializer implements CommandLineRunner {
                 Role userRole = seedRole("USER", "Người dùng thông thường", USER_PERMISSIONS);
 
                 seedUser("admin", "Administrator", "admin@popfigure.local", "0900000001", "Admin123!", adminRole);
-                seedUser("usertest", "Test User", "user@popfigure.local", "0900000002", "User123!", userRole);
 
                 seedCategoriesAndProducts();
 

@@ -44,9 +44,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isInitialized = ref(false)
 
   const isAuthenticated = computed(() => Boolean(token.value))
-  const isAdmin = computed(() =>
-    authorities.value.some((authority) => authority === 'ROLE_ADMIN' || authority === 'PRODUCT_MANAGE' || authority === 'ORDER_VIEW' || authority === 'USER_VIEW'),
-  )
+  const isAdmin = computed(() => authorities.value.includes('ROLE_ADMIN'))
   const displayName = computed(() => user.value?.full_name || user.value?.name || 'Khách')
   const initials = computed(() => {
     const source = displayName.value
